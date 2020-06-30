@@ -9,6 +9,7 @@ import com.appjee.receptionfacade.domain.SoapMessage;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.ActivationConfigProperty;
@@ -30,6 +31,8 @@ import javax.xml.bind.Unmarshaller;
 })
 public class QueueProcessor implements MessageListener {
 
+    private DecipherTester decipherTester;
+
     public QueueProcessor() {
     }
 
@@ -37,17 +40,27 @@ public class QueueProcessor implements MessageListener {
     public void onMessage(Message message) {
         try {
             try (Reader targetReader = new StringReader(message.getBody(String.class))) {
-                
+
                 JAXBContext jaxbContext = JAXBContext.newInstance(SoapMessage.class);
                 Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-                
+
                 SoapMessage soapMessage = (SoapMessage) jaxbUnmarshaller.unmarshal(targetReader);
-                
+
                 System.out.println("--------------------------");
                 System.out.println(soapMessage.getInfo());
+                System.out.println(soapMessage.getStatusOp());
                 System.out.println("--------------------------");
+
+                try {
+                    try {
+                        decipherTester = new DecipherTester(soapMessage);
+                    } catch (SQLException ex) {
+                        Logger.getLogger(QueueProcessor.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                } catch (ClassNotFoundException ex) {
+                    Logger.getLogger(QueueProcessor.class.getName()).log(Level.SEVERE, null, ex);
+                }
                 
-                soapMessage.setInfo("Info côté SERVEUR");
             }
         } catch (JAXBException | JMSException | IOException ex) {
             Logger.getLogger(QueueProcessor.class.getName()).log(Level.SEVERE, null, ex);
