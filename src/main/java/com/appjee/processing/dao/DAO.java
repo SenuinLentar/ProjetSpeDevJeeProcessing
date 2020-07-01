@@ -20,6 +20,7 @@ public class DAO {
     private Connection conn = null;
     private Statement stmt = null;
 
+    //Opens a connection to the Oracle database
     public void connectionToDb() throws ClassNotFoundException {
         try {
 
@@ -33,12 +34,11 @@ public class DAO {
         }
     }
 
+    //Gets a word from the dictionaryfr table in the Oracle database
     public Boolean getWordQuery(String word) throws SQLException {
         ResultSet rs;
         String result = "";
-        
-        //System.out.println("select * from dictionaryfr where words = '" + word + "'");
-        
+                
         rs = stmt.executeQuery("select * from dictionaryfr where words = '" + word + "'");
         while (rs.next()) {
             result = rs.getString("words");
@@ -46,6 +46,7 @@ public class DAO {
         return result.equals(word);
     }
 
+    //Closes the connection to the Oracle database
     public void closeConnection() throws SQLException {
         conn.close();
     }

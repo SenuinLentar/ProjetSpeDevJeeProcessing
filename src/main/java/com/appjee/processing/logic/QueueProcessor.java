@@ -49,6 +49,7 @@ public class QueueProcessor implements MessageListener {
                 System.out.println("--------------------------");
                 System.out.println(soapMessage.getInfo());
                 System.out.println(soapMessage.getStatusOp());
+//                System.out.println(soapMessage.getData()[0].toString());
                 System.out.println("--------------------------");
 
                 try {
