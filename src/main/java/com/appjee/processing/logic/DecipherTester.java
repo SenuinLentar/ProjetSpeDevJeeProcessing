@@ -5,77 +5,87 @@
  */
 package com.appjee.processing.logic;
 
+import com.appjee.processing.convertion.MessageConverter;
 import com.appjee.processing.dao.DAO;
+import com.appjee.processing.webservice.IMessageService;
+import com.appjee.processing.webservice.Message;
+import com.appjee.processing.webservice.MessageService;
 import com.appjee.receptionfacade.domain.SoapMessage;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.enterprise.context.RequestScoped;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.xml.ws.WebServiceRef;
+import javax.xml.ws.soap.Addressing;
 
 /**
  *
  * @author myal6
  */
-public class DecipherTester {
+@Named(value = "decipherTester")
+@RequestScoped
+public class DecipherTester implements IDecipherTester {
 
     private SoapMessage soapMessage;
     private DAO dao;
+    private MessageConverter msgConverter;
 
-    public DecipherTester(SoapMessage soapMessage) throws ClassNotFoundException, SQLException {
-        this.soapMessage = soapMessage;
-        dao = new DAO();
-        //Connection to Oracle database
-        dao.connectionToDb();
-        
-//        this.soapMessage.setInfo("La dépression, également appelée dépression caractérisée, dépression clinique ou dépression majeure, est un trouble mental caractérisé par des épisodes de baisse d'humeur (tristesse) accompagnée d'une faible estime de soi, d’une perte de mémoire, d’une perte ou prise de poids plus ou moins importante ainsi que d'une perte de plaisir ou d'intérêt dans des activités habituellement ressenties comme agréables par l'individu. Cet ensemble de symptômes (syndrome individualisé et anciennement classifié dans le groupe des troubles de l'humeur par le manuel diagnostique de l'association américaine de psychiatrie) figure depuis la sortie du DSM-5 en mai 2013 dans la catégorie appelée « troubles dépressifs ». Le terme de « dépression » est cependant ambigu ; il est en effet parfois utilisé dans le langage courant pour décrire d'autres troubles de l'humeur ou d'autres types de baisse d'humeur moins significatifs qui ne sont pas des dépressions proprement dites.\n"
-//                + "\n"
-//                + "La dépression est une condition handicapante qui peut retentir sur le sommeil, l'alimentation et la santé en général avec notamment un risque de suicide dans les cas les plus graves (surtout dans la dépression mélancolique), ainsi que sur la famille, la scolarité ou le travail. Aux États-Unis, approximativement 3,4 % des individus dépressifs meurent par suicide et plus de 60 % des individus qui se sont suicidés souffraient de dépression ou d'un autre trouble de l'humeur1. Les individus souffrant de dépression ont une espérance de vie raccourcie par rapport aux autres individus, en partie à cause d'une plus grande susceptibilité à d'autres maladies et au risque de suicide. Les patients actuellement ou anciennement dépressifs sont parfois stigmatisés.\n"
-//                + "\n"
-//                + "Le diagnostic de la dépression se base sur plusieurs éléments : le ressenti personnel rapporté par le patient, le comportement perçu par son entourage et le résultat d'un examen psychologique. Les médecins peuvent prescrire des examens complémentaires pour rechercher d'autres maladies qui peuvent causer des symptômes similaires. La maladie est plus fréquente entre 20 et 30 ans, avec un pic plus tardif entre 30 et 40 ans2.\n"
-//                + "\n"
-//                + " \"Je suis secret\" "
-//                + "Les patients sont habituellement traités avec un médicament antidépresseur, et dans certains cas suivent une psychothérapie. L'hospitalisation peut s'avérer nécessaire dans le cas d'auto-négligence, s'il existe un risque significatif de suicide ou pour la sécurité de l'entourage. Les dépressions résistantes aux traitements médicamenteux et à la psychothérapie peuvent être traitées par électroconvulsivothérapie ou par stimulation magnétique transcrânienne. La durée de la dépression est grandement variable, pouvant aller d'un épisode unique de quelques semaines à une longue période d'épisodes dépressifs prolongés et répétés (dans ce cas, il s'agit de dépression récurrente ou trouble unipolaire, parfois improprement appelée dépression unipolaire).\n"
-//                + "\n"
-//                + "Au travers des siècles, la connaissance de la nature et des causes de la dépression a évolué, bien que sa compréhension soit à ce jour incomplète et encore sujette à discussion. Les causes qui ont pu être proposées incluent des facteurs biologiques, psychologiques et psychosociaux ou environnementaux. L'utilisation à long terme et l'abus de certains médicaments et substances peuvent favoriser ou aggraver les symptômes dépressifs. Les psychothérapies peuvent se baser sur les théories de la personnalité, de la communication interpersonnelle, et de l'apprentissage. La plupart des théories biologiques se concentrent sur des neurotransmetteurs, des molécules naturellement présentes dans le cerveau qui permettent la communication chimique entre neurones. Les neurotransmetteurs de type monoaminergique comme la sérotonine, la noradrénaline et la dopamine sont plus particulièrement étudiés.");
-//
-//        this.soapMessage.setInfo("jerajoute de la merde \"Je suis secret\" qksrglqksgl");
-//        this.soapMessage.setInfo(" \"Je suis secret\" \n"
-//                + "Les patients sont habituellement traités avec un médicament antidépresseur, et dans certains cas suivent une psychothérapie. L'hospitalisation peut s'avérer nécessaire dans le cas d'auto-négligence, s'il existe un risque significatif de suicide ou pour la sécurité de l'entourage. Les dépressions résistantes aux traitements médicamenteux et à la psychothérapie peuvent être traitées par électroconvulsivothérapie ou par stimulation magnétique transcrânienne. La durée de la dépression est grandement variable, pouvant aller d'un épisode unique de quelques semaines à une longue période d'épisodes dépressifs prolongés et répétés (dans ce cas, il s'agit de dépression récurrente ou trouble unipolaire, parfois improprement appelée dépression unipolaire)."
-//                + "Au travers des siècles, la connaissance de la nature et des causes de la dépression a évolué, bien que sa compréhension soit à ce jour incomplète et encore sujette à discussion. Les causes qui ont pu être proposées incluent des facteurs biologiques, psychologiques et psychosociaux ou environnementaux. L'utilisation à long terme et l'abus de certains médicaments et substances peuvent favoriser ou aggraver les symptômes dépressifs. Les psychothérapies peuvent se baser sur les théories de la personnalité, de la communication interpersonnelle, et de l'apprentissage. La plupart des théories biologiques se concentrent sur des neurotransmetteurs, des molécules naturellement présentes dans le cerveau qui permettent la communication chimique entre neurones. Les neurotransmetteurs de type monoaminergique comme la sérotonine, la noradrénaline et la dopamine sont plus particulièrement étudiés.");
-        
-        //Starting the verification of the text
-        verifyTextIsCLear();
-        
-        //Close the connection to the Oracle Database
-        dao.closeConnection();
+//    @WebServiceRef(MessageService.class)
+//    private IMessageService messageService;
+    
+    private ResponseSender responseSender = new ResponseSender();
+
+    public DecipherTester() {
     }
 
-    public void verifyTextIsCLear() throws SQLException {
+    @Override
+    public void verifyTextIsCLear(SoapMessage message) {
+
+        dao = new DAO();
+        msgConverter = new MessageConverter();
+
+        //Connection to Oracle databaseS
+        dao.connectionToDb();
+
+//        //Starting the verification of the text
+//        verifyTextIsCLear();
+//        
+//        //Close the connection to the Oracle Database
+//        dao.closeConnection();
 //        System.out.println(soapMessage.getData()[0].toString());
-        
+        this.soapMessage = message;
+
         //Split the text into single words
-        String[] fileWords = soapMessage.getData()[0].toString().split("[ '.&\"(_)=)]");   
-        
-        Boolean verificationResult;
+        String[] fileWords = soapMessage.getData()[0].toString().split("[ '.&\"(_)=)]");
+
+        Boolean verificationResult = false;
         List<Boolean> verificationResultList = new ArrayList();
-        
-        int sampleSize = 10;            //in percentage
+
+        int sampleSize = 25;            //in percentage
         int accuracyMinimum = 75;       //in percentage
         //Represents the total number of words that will be tested in the Oracle database
-        int numberOfWordsToTest = Math.round((float) fileWords.length * (float)sampleSize / 100);
-        
-        int wordIndex = 0;        
+        int numberOfWordsToTest = Math.round((float) fileWords.length * (float) sampleSize / 100);
+
+        int wordIndex = 0;
         int trueOccurences = 0;
-        float resultAccuracy = 0;       
+        float resultAccuracy = 0;
 
         //Tests random words from the text
         for (int i = 0; i < numberOfWordsToTest; i++) {
-            wordIndex = (int) (Math.random()*(fileWords.length-1));
-//            System.out.println(wordIndex);
-            verificationResult = dao.getWordQuery(fileWords[i].toLowerCase());
+            wordIndex = (int) (Math.random() * (fileWords.length - 1));
+            try {
+                //            System.out.println(wordIndex);
+                verificationResult = dao.getWordQuery(fileWords[wordIndex].toLowerCase());
+            } catch (SQLException ex) {
+                Logger.getLogger(DecipherTester.class.getName()).log(Level.SEVERE, null, ex);
+            }
             verificationResultList.add(verificationResult);
 //            System.out.println(verificationResult);
         }
@@ -104,5 +114,16 @@ public class DecipherTester {
         while (m.find()) {
             System.out.println(m.group(1));
         }
+        soapMessage.setOperationName("updateResult");
+        Message msg = msgConverter.CreateMessageFromSoapMessage(soapMessage);
+
+//        messageService.servicing(msg);
+        System.out.println("responseSender : " + responseSender);
+        System.out.println("responseSender : " + responseSender.getTest());
+        responseSender.sendResponse(msg);
+    }
+
+    public DAO getDao() {
+        return dao;
     }
 }

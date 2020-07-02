@@ -21,7 +21,7 @@ public class DAO {
     private Statement stmt = null;
 
     //Opens a connection to the Oracle database
-    public void connectionToDb() throws ClassNotFoundException {
+    public void connectionToDb(){
         try {
 
             String url = "jdbc:oracle:thin:@localhost:1521:orcl";

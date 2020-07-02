@@ -14,6 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.MessageDriven;
+import javax.inject.Inject;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
@@ -31,9 +32,12 @@ import javax.xml.bind.Unmarshaller;
 })
 public class QueueProcessor implements MessageListener {
 
+    private SoapMessage soapMessage;
+    
     private DecipherTester decipherTester;
 
     public QueueProcessor() {
+        decipherTester = new DecipherTester();
     }
 
     @Override
@@ -44,24 +48,22 @@ public class QueueProcessor implements MessageListener {
                 JAXBContext jaxbContext = JAXBContext.newInstance(SoapMessage.class);
                 Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 
-                SoapMessage soapMessage = (SoapMessage) jaxbUnmarshaller.unmarshal(targetReader);
+                soapMessage = (SoapMessage) jaxbUnmarshaller.unmarshal(targetReader);
 
                 System.out.println("--------------------------");
                 System.out.println(soapMessage.getInfo());
                 System.out.println(soapMessage.getStatusOp());
 //                System.out.println(soapMessage.getData()[0].toString());
                 System.out.println("--------------------------");
-
+        
+                decipherTester.verifyTextIsCLear(soapMessage);
+                
                 try {
-                    try {
-                        decipherTester = new DecipherTester(soapMessage);
-                    } catch (SQLException ex) {
-                        Logger.getLogger(QueueProcessor.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                } catch (ClassNotFoundException ex) {
+                    decipherTester.getDao().closeConnection();
+                } catch (SQLException ex) {
                     Logger.getLogger(QueueProcessor.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                
+
             }
         } catch (JAXBException | JMSException | IOException ex) {
             Logger.getLogger(QueueProcessor.class.getName()).log(Level.SEVERE, null, ex);

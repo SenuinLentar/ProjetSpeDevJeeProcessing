@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" prefer="system">
+    <system systemId="http://localhost:9018/MessageService/FacadeHttp" uri="wsdl/localhost_9018/MessageService/FacadeHttp.xml"/>
+    <system systemId="http://localhost:9018/MessageService/Facade" uri="wsdl/localhost_9018/MessageService/Facade.xml"/>
+    <system systemId="http://localhost:9018/MessageService/Facade?wsdl" uri="wsdl/localhost_9018/MessageService/Facade.wsdl"/>
+    <system systemId="http://localhost:9018/MessageService/Facade?xsd=xsd0" uri="wsdl/localhost_9018/MessageService/Facade.xsd_xsd0.xsd"/>
+    <system systemId="http://localhost:9018/MessageService/Facade?xsd=xsd1" uri="wsdl/localhost_9018/MessageService/Facade.xsd_xsd1.xsd"/>
+    <system systemId="http://localhost:9018/MessageService/Facade?xsd=xsd2" uri="wsdl/localhost_9018/MessageService/Facade.xsd_xsd2.xsd"/>
+    <system systemId="http://localhost:9018/MessageService/Facade?xsd=xsd3" uri="wsdl/localhost_9018/MessageService/Facade.xsd_xsd3.xsd"/>
+</catalog>
