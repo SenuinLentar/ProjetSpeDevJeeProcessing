@@ -36,10 +36,8 @@ public class DecipherTester implements IDecipherTester {
     private SoapMessage soapMessage;
     private DAO dao;
     private MessageConverter msgConverter;
+    private List<String> data = new ArrayList<>();
 
-//    @WebServiceRef(MessageService.class)
-//    private IMessageService messageService;
-    
     private ResponseSender responseSender = new ResponseSender();
 
     public DecipherTester() {
@@ -51,19 +49,10 @@ public class DecipherTester implements IDecipherTester {
         dao = new DAO();
         msgConverter = new MessageConverter();
 
-        //Connection to Oracle databaseS
+        //Connection to Oracle database
         dao.connectionToDb();
 
-//        //Starting the verification of the text
-//        verifyTextIsCLear();
-//        
-//        //Close the connection to the Oracle Database
-//        dao.closeConnection();
-//        System.out.println(soapMessage.getData()[0].toString());
         this.soapMessage = message;
-
-        //Split the text into single words
-        String[] fileWords = soapMessage.getData()[0].toString().split("[ '.&\"(_)=)]");
 
         Boolean verificationResult = false;
         List<Boolean> verificationResultList = new ArrayList();
@@ -71,56 +60,90 @@ public class DecipherTester implements IDecipherTester {
         int sampleSize = 25;            //in percentage
         int accuracyMinimum = 75;       //in percentage
         //Represents the total number of words that will be tested in the Oracle database
-        int numberOfWordsToTest = Math.round((float) fileWords.length * (float) sampleSize / 100);
+        int numberOfWordsToTest = 0;
 
         int wordIndex = 0;
         int trueOccurences = 0;
         float resultAccuracy = 0;
 
-        //Tests random words from the text
-        for (int i = 0; i < numberOfWordsToTest; i++) {
-            wordIndex = (int) (Math.random() * (fileWords.length - 1));
-            try {
-                //            System.out.println(wordIndex);
-                verificationResult = dao.getWordQuery(fileWords[wordIndex].toLowerCase());
-            } catch (SQLException ex) {
-                Logger.getLogger(DecipherTester.class.getName()).log(Level.SEVERE, null, ex);
+        for (int j = 0; j < soapMessage.getData().length - 1; j = j + 2) {
+            //Split the text into single words
+            String[] fileWords = soapMessage.getData()[j + 1].toString().split("[ '.&\"(_)=)]");
+            //Get the number of words to be tested
+            numberOfWordsToTest = Math.round((float) fileWords.length * (float) sampleSize / 100);
+
+            //Tests random words from the text
+            for (int i = 0; i < numberOfWordsToTest; i++) {
+                wordIndex = (int) (Math.random() * (fileWords.length - 1));
+                try {
+                    verificationResult = dao.getWordQuery(fileWords[wordIndex].toLowerCase());
+                } catch (SQLException ex) {
+                    Logger.getLogger(DecipherTester.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                verificationResultList.add(verificationResult);
             }
-            verificationResultList.add(verificationResult);
-//            System.out.println(verificationResult);
-        }
 
-        //Calculate the percentage of words that had been recognised in the Oracle database
-        trueOccurences = Collections.frequency(verificationResultList, true);
-        resultAccuracy = Math.round((float) trueOccurences / (float) numberOfWordsToTest * 100);
+            //Calculate the percentage of words that had been recognised in the Oracle database
+            trueOccurences = Collections.frequency(verificationResultList, true);
+            resultAccuracy = Math.round((float) trueOccurences / (float) numberOfWordsToTest * 100);
 
-        System.out.println("--------------------------");
-        System.out.println("numberOfWordsToTest : " + numberOfWordsToTest);
-        System.out.println("trueOccurences : " + trueOccurences);
-        System.out.println("fileWords.length : " + fileWords.length);
-        System.out.println("resultAccuracy : " + resultAccuracy);
-        System.out.println("--------------------------");
+            System.out.println("--------------------------");
+            System.out.println("numberOfWordsToTest : " + numberOfWordsToTest);
+            System.out.println("trueOccurences : " + trueOccurences);
+            System.out.println("fileWords.length : " + fileWords.length);
+            System.out.println("resultAccuracy : " + resultAccuracy);
+            System.out.println("--------------------------");
 
-        //If the accuracy is high enough, search for the secret message in the text
-        if (resultAccuracy >= accuracyMinimum) {
-            searchSecretMessage();
+            soapMessage.setOperationName("updateResult");
+
+            data.clear();
+            //Put the File name in the List
+            data.add(soapMessage.getData()[j].toString());
+            //Put the File content in the List
+            data.add(soapMessage.getData()[j + 1].toString());
+            //Put the File key in the List
+            data.add(soapMessage.getData()[soapMessage.getData().length - 1].toString());
+
+            soapMessage.setData(data.toArray());
+
+            callSender();
+
+            //If the accuracy is high enough, search for the secret message in the text
+            if (resultAccuracy >= accuracyMinimum) {
+                searchSecretMessage(j);
+            }
         }
     }
 
     //Search the secret message in the text
-    private void searchSecretMessage() {
+    private void searchSecretMessage(int loopIndex) {
         Pattern p = Pattern.compile("\"([^\"]*)\"");
-        Matcher m = p.matcher(soapMessage.getData()[0].toString());
+        Matcher m = p.matcher(soapMessage.getData()[1].toString());
         while (m.find()) {
             System.out.println(m.group(1));
         }
-        soapMessage.setOperationName("updateResult");
+
+        soapMessage.setOperationName("updateSecretResult");
+
+        data.clear();
+        //Put the File name in the List
+        data.add(soapMessage.getData()[loopIndex].toString());
+        //Put the File key in the List
+        data.add(soapMessage.getData()[soapMessage.getData().length - 1].toString());
+        //Put the File secret message in the List
+        data.add(m.group(1));
+
+        soapMessage.setData(data.toArray());
+
+        callSender();
+    }
+
+    private void callSender() {
         Message msg = msgConverter.CreateMessageFromSoapMessage(soapMessage);
 
-//        messageService.servicing(msg);
         System.out.println("responseSender : " + responseSender);
         System.out.println("Message Content test : " + msg.getOperationName().getValue());
-        
+
         responseSender.sendResponse(msg);
     }
 
