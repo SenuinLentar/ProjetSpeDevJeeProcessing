@@ -7,9 +7,7 @@ package com.appjee.processing.logic;
 
 import com.appjee.processing.convertion.MessageConverter;
 import com.appjee.processing.dao.DAO;
-import com.appjee.processing.webservice.IMessageService;
 import com.appjee.processing.webservice.Message;
-import com.appjee.processing.webservice.MessageService;
 import com.appjee.receptionfacade.domain.SoapMessage;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -20,10 +18,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.enterprise.context.RequestScoped;
-import javax.inject.Inject;
 import javax.inject.Named;
-import javax.xml.ws.WebServiceRef;
-import javax.xml.ws.soap.Addressing;
 
 /**
  *
@@ -34,6 +29,8 @@ import javax.xml.ws.soap.Addressing;
 public class DecipherTester implements IDecipherTester {
 
     private SoapMessage soapMessage;
+    private SoapMessage soapMessageToSend;
+
     private DAO dao;
     private MessageConverter msgConverter;
     private List<String> data = new ArrayList<>();
@@ -45,7 +42,7 @@ public class DecipherTester implements IDecipherTester {
 
     @Override
     public void verifyTextIsCLear(SoapMessage message) {
-
+        soapMessageToSend = new SoapMessage();
         dao = new DAO();
         msgConverter = new MessageConverter();
 
@@ -65,7 +62,6 @@ public class DecipherTester implements IDecipherTester {
         int wordIndex = 0;
         int trueOccurences = 0;
         float resultAccuracy = 0;
-
         for (int j = 0; j < soapMessage.getData().length - 1; j = j + 2) {
             //Split the text into single words
             String[] fileWords = soapMessage.getData()[j + 1].toString().split("[ '.&\"(_)=)]");
@@ -94,7 +90,12 @@ public class DecipherTester implements IDecipherTester {
             System.out.println("resultAccuracy : " + resultAccuracy);
             System.out.println("--------------------------");
 
-            soapMessage.setOperationName("updateResult");
+            soapMessageToSend.setAppVersion(soapMessage.getAppVersion());
+            soapMessageToSend.setOperationName("updateResult");
+            soapMessageToSend.setInfo(soapMessage.getInfo());
+            soapMessageToSend.setOperationVersion(soapMessage.getOperationVersion());
+            soapMessageToSend.setTokenApp(soapMessage.getTokenApp());
+            soapMessageToSend.setTokenUser(soapMessage.getTokenUser());
 
             data.clear();
             //Put the File name in the List
@@ -104,9 +105,9 @@ public class DecipherTester implements IDecipherTester {
             //Put the File key in the List
             data.add(soapMessage.getData()[soapMessage.getData().length - 1].toString());
 
-            soapMessage.setData(data.toArray());
+            soapMessageToSend.setData(data.toArray());
 
-            callSender();
+            callSender(soapMessageToSend);
 
             //If the accuracy is high enough, search for the secret message in the text
             if (resultAccuracy >= accuracyMinimum) {
@@ -118,28 +119,41 @@ public class DecipherTester implements IDecipherTester {
     //Search the secret message in the text
     private void searchSecretMessage(int loopIndex) {
         Pattern p = Pattern.compile("\"([^\"]*)\"");
-        Matcher m = p.matcher(soapMessage.getData()[1].toString());
+        Matcher m = p.matcher(soapMessage.getData()[loopIndex + 1].toString());
+        System.out.println(soapMessage.getData()[loopIndex + 1].toString());
+        String secretMessage = "";
+
         while (m.find()) {
+            secretMessage = m.group(1);
             System.out.println(m.group(1));
         }
 
-        soapMessage.setOperationName("updateSecretResult");
+        if (secretMessage != "") {
 
-        data.clear();
-        //Put the File name in the List
-        data.add(soapMessage.getData()[loopIndex].toString());
-        //Put the File key in the List
-        data.add(soapMessage.getData()[soapMessage.getData().length - 1].toString());
-        //Put the File secret message in the List
-        data.add(m.group(1));
+            soapMessageToSend.setAppVersion(soapMessage.getAppVersion());
+            soapMessageToSend.setOperationName("updateSecretResult");
+            soapMessageToSend.setInfo(soapMessage.getInfo());
+            soapMessageToSend.setOperationVersion(soapMessage.getOperationVersion());
+            soapMessageToSend.setTokenApp(soapMessage.getTokenApp());
+            soapMessageToSend.setTokenUser(soapMessage.getTokenUser());
+            
 
-        soapMessage.setData(data.toArray());
+            data.clear();
+            //Put the File name in the List
+            data.add(soapMessage.getData()[loopIndex].toString());
+            //Put the File key in the List
+            data.add(soapMessage.getData()[soapMessage.getData().length - 1].toString());
+            //Put the File secret message in the List
+            data.add(secretMessage);
 
-        callSender();
+            soapMessageToSend.setData(data.toArray());
+
+            callSender(soapMessageToSend);
+        }
     }
 
-    private void callSender() {
-        Message msg = msgConverter.CreateMessageFromSoapMessage(soapMessage);
+    private void callSender(SoapMessage messageToSend) {
+        Message msg = msgConverter.CreateMessageFromSoapMessage(messageToSend);
 
         System.out.println("responseSender : " + responseSender);
         System.out.println("Message Content test : " + msg.getOperationName().getValue());
