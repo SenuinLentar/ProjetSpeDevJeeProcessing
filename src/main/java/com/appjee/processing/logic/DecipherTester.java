@@ -119,7 +119,8 @@ public class DecipherTester implements IDecipherTester {
 
 //        messageService.servicing(msg);
         System.out.println("responseSender : " + responseSender);
-        System.out.println("responseSender : " + responseSender.getTest());
+        System.out.println("Message Content test : " + msg.getOperationName().getValue());
+        
         responseSender.sendResponse(msg);
     }
 
