@@ -88,44 +88,46 @@ public class DecipherTester implements IDecipherTester {
             System.out.println("trueOccurences : " + trueOccurences);
             System.out.println("fileWords.length : " + fileWords.length);
             System.out.println("resultAccuracy : " + resultAccuracy);
-            System.out.println("--------------------------");
-
-            soapMessageToSend.setAppVersion(soapMessage.getAppVersion());
-            soapMessageToSend.setOperationName("updateResult");
-            soapMessageToSend.setInfo(soapMessage.getInfo());
-            soapMessageToSend.setOperationVersion(soapMessage.getOperationVersion());
-            soapMessageToSend.setTokenApp(soapMessage.getTokenApp());
-            soapMessageToSend.setTokenUser(soapMessage.getTokenUser());
-
-            data.clear();
-            //Put the File name in the List
-            data.add(soapMessage.getData()[j].toString());
-            //Put the File content in the List
-            data.add(soapMessage.getData()[j + 1].toString());
-            //Put the File key in the List
-            data.add(soapMessage.getData()[soapMessage.getData().length - 1].toString());
-
-            soapMessageToSend.setData(data.toArray());
-
-            callSender(soapMessageToSend);
+//            System.out.println("--------------------------");
 
             //If the accuracy is high enough, search for the secret message in the text
             if (resultAccuracy >= accuracyMinimum) {
-                searchSecretMessage(j);
+                soapMessageToSend.setAppVersion(soapMessage.getAppVersion());
+                soapMessageToSend.setOperationName("updateResult");
+                soapMessageToSend.setInfo(soapMessage.getInfo());
+                soapMessageToSend.setOperationVersion(soapMessage.getOperationVersion());
+                soapMessageToSend.setTokenApp(soapMessage.getTokenApp());
+                soapMessageToSend.setTokenUser(soapMessage.getTokenUser());
+
+                data.clear();
+                //Put the File name in the List
+                data.add(soapMessage.getData()[j].toString());
+                //Put the File content in the List
+                data.add(soapMessage.getData()[j + 1].toString());
+                //Put the File key in the List
+                data.add(soapMessage.getData()[soapMessage.getData().length - 1].toString());
+                //Put the File accuracy percentage in the List
+                data.add(String.valueOf(resultAccuracy));
+
+                soapMessageToSend.setData(data.toArray());
+
+                callSender(soapMessageToSend);
+
+                searchSecretMessage(j, (int) resultAccuracy);
             }
         }
     }
 
     //Search the secret message in the text
-    private void searchSecretMessage(int loopIndex) {
+    private void searchSecretMessage(int loopIndex, int accuracy) {
         Pattern p = Pattern.compile("\"([^\"]*)\"");
         Matcher m = p.matcher(soapMessage.getData()[loopIndex + 1].toString());
-        System.out.println(soapMessage.getData()[loopIndex + 1].toString());
+//        System.out.println(soapMessage.getData()[loopIndex + 1].toString());
         String secretMessage = "";
 
         while (m.find()) {
             secretMessage = m.group(1);
-            System.out.println(m.group(1));
+//            System.out.println(m.group(1));
         }
 
         if (secretMessage != "") {
@@ -136,7 +138,6 @@ public class DecipherTester implements IDecipherTester {
             soapMessageToSend.setOperationVersion(soapMessage.getOperationVersion());
             soapMessageToSend.setTokenApp(soapMessage.getTokenApp());
             soapMessageToSend.setTokenUser(soapMessage.getTokenUser());
-            
 
             data.clear();
             //Put the File name in the List
@@ -145,6 +146,8 @@ public class DecipherTester implements IDecipherTester {
             data.add(soapMessage.getData()[soapMessage.getData().length - 1].toString());
             //Put the File secret message in the List
             data.add(secretMessage);
+            //Put the File accuracy percentage in the List
+            data.add(String.valueOf(accuracy));
 
             soapMessageToSend.setData(data.toArray());
 
@@ -155,8 +158,8 @@ public class DecipherTester implements IDecipherTester {
     private void callSender(SoapMessage messageToSend) {
         Message msg = msgConverter.CreateMessageFromSoapMessage(messageToSend);
 
-        System.out.println("responseSender : " + responseSender);
-        System.out.println("Message Content test : " + msg.getOperationName().getValue());
+//        System.out.println("responseSender : " + responseSender);
+//        System.out.println("Message Content test : " + msg.getOperationName().getValue());
 
         responseSender.sendResponse(msg);
     }

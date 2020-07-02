@@ -38,12 +38,12 @@ public class MessageConverter {
         
         msg.setTokenUser(factory.createMessageTokenUser(soapMessage.getTokenUser()));
 
-        System.out.println("--------------------------");
-        //System.out.println(msg.getInfo().getValue());
-        //System.out.println(msg.getTokenApp().getValue());
-        //System.out.println(msg.getTokenUser().getValue());
-        System.out.println(msg.getOperationName().getValue());
-        System.out.println("--------------------------");
+//        System.out.println("--------------------------");
+//        //System.out.println(msg.getInfo().getValue());
+//        //System.out.println(msg.getTokenApp().getValue());
+//        //System.out.println(msg.getTokenUser().getValue());
+//        System.out.println(msg.getOperationName().getValue());
+//        System.out.println("--------------------------");
 
         return msg;
     }

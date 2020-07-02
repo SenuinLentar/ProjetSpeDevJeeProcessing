@@ -23,9 +23,9 @@ public class ResponseSender implements IResponseSender {
     public void sendResponse(Message message) {
 
             messageService = new MessageService();
-            System.out.println("messageService : " + messageService);
+//            System.out.println("messageService : " + messageService);
             IMessageService port = messageService.getBasicHttpBindingIMessageService();
-            System.out.println("OperationName : " + message.getOperationName().getValue());
+//            System.out.println("OperationName : " + message.getOperationName().getValue());
             port.servicing(message);
 
             System.out.println("FIN");

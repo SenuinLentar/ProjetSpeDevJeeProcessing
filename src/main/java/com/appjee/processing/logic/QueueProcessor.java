@@ -14,7 +14,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.ActivationConfigProperty;
 import javax.ejb.MessageDriven;
-import javax.inject.Inject;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageListener;
@@ -50,11 +49,11 @@ public class QueueProcessor implements MessageListener {
 
                 soapMessage = (SoapMessage) jaxbUnmarshaller.unmarshal(targetReader);
 
-                System.out.println("--------------------------");
-                System.out.println(soapMessage.getInfo());
-                System.out.println(soapMessage.getStatusOp());
+//                System.out.println("--------------------------");
+//                System.out.println(soapMessage.getInfo());
+//                System.out.println(soapMessage.getStatusOp());
 //                System.out.println(soapMessage.getData()[0].toString());
-                System.out.println("--------------------------");
+//                System.out.println("--------------------------");
         
                 decipherTester.verifyTextIsCLear(soapMessage);
                 
